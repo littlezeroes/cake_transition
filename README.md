@@ -1,51 +1,106 @@
-# floating_navbar
+# Cake Animation
 
-### Simple customisable floating bottom navigation bar.
+Flutter animations and UI components showcase with smooth transitions and interactive elements.
 
+## Features
 
-## Usage
-### Add dependency
-```yaml
-  floating_navbar: ^3.0.0
+### Tab Navigation
+- Animated tab bar with smooth shape indicator (350ms easeInOutCubic)
+- Drag gesture support for intuitive tab switching
+- Responsive touch areas for better usability
+- Portrait-only orientation lock
+
+### Page Transitions
+- iOS-style page transitions with custom curves
+- Swipeable page routes
+- Multiple transition styles (fade, slide, scale)
+
+### Interactive Components
+- Animated cards with flip effects
+- Custom dialogs with smooth animations
+- Toast notifications
+- OTP input screens
+- Bottom sheets
+
+## Getting Started
+
+### Prerequisites
+- Flutter SDK
+- Dart SDK
+
+### Installation
+
+```bash
+git clone https://github.com/huygeek/cake_animation.git
+cd cake_animation
+flutter pub get
 ```
 
-### Import package
-```dart
-  import 'package:floating_navbar/floating_navbar.dart';
+### Run Example
+
+```bash
+cd example
+flutter run
 ```
 
-### Use in code as follows
+## Project Structure
+
+```
+lib/
+├── floating_navbar.dart          # Main navigation component
+├── floating_navbar_item.dart     # Navigation item model
+└── animation_constants.dart      # Animation configuration
+
+example/lib/
+├── main.dart                     # Main app with tab navigation
+├── card_detail_screen.dart       # Card animations demo
+├── otp_screen.dart              # OTP input UI
+├── custom_dialog.dart           # Dialog component
+├── custom_toast.dart            # Toast notifications
+├── swipeable_page_route.dart    # Page transition implementation
+└── ...                          # More examples
+```
+
+## Tab Navigation Example
+
 ```dart
-class MyApp extends StatelessWidget {
+import 'package:flutter/material.dart';
+
+class FigmaTabScreen extends StatefulWidget {
+  @override
+  _FigmaTabScreenState createState() => _FigmaTabScreenState();
+}
+
+class _FigmaTabScreenState extends State<FigmaTabScreen> {
+  int _selectedTabIndex = 0;
+  final List<String> tabs = ['Tài sản', 'Danh mục', 'Phải trả', 'Quyền', 'Tab'];
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FloatingNavBar',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: FloatingNavBar(
-        resizeToAvoidBottomInset: false,
-        color: Colors.green,
-        selectedIconColor: Colors.white,
-        unselectedIconColor: Colors.white.withOpacity(0.6),
-        items: [
-          FloatingNavBarItem(iconData: Icons.home_outlined, page: Home(), title: 'Home'),
-          FloatingNavBarItem(iconData: Icons.local_hospital_outlined, page: Doctors(), title: 'Doctors'),
-          FloatingNavBarItem(iconData: Icons.alarm, page: Reminders(), title: 'Reminders'),
-          FloatingNavBarItem(iconData: Icons.pending_actions_outlined, page: Records(), title: 'Records'),
-        ],
-        horizontalPadding: 10.0,
-        hapticFeedback: true,
-        showTitle: true,
-      ),
-    );
+    // Tab bar with animated indicator
+    // Supports both tap and drag gestures
+    // 350ms easeInOutCubic animation
   }
 }
 ```
 
-> Thanks to [Darshan Aswath](https://github.com/xanf-code), [Kuda K](https://github.com/kudak3) and [Altay](https://github.com/altaysakarya)
+## Customization
 
-### Screenshot
-[![Floating Navbar](https://raw.githubusercontent.com/iamngoni/floating_navbar/master/screenshots/Screenshot_1617377389.png)](https://www.iamngoni.co.zw)
+### Animation Constants
+
+All animations use consistent timing and curves defined in `animation_constants.dart`:
+- Tab indicator: 350ms with `Curves.easeInOutCubic`
+- Page transitions: 250ms for forward, 220ms for reverse
+- Card flips: Custom timing based on interaction
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Acknowledgments
+
+Built with Flutter and inspired by modern mobile UI/UX patterns.
