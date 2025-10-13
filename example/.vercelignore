@@ -1,0 +1,12 @@
+node_modules
+android
+ios
+macos
+linux
+windows
+.dart_tool
+.packages
+build/app
+test
+*.md
+screenshots

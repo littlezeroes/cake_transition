@@ -1,0 +1,21 @@
+{
+  "name": "floating-navbar-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for floating navbar Flutter app",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:safari": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen https://example-8qftjzldl-huy-kieus-projects.vercel.app"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "serve": "^14.2.0"
+  }
+}

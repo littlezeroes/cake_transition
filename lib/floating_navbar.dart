@@ -1,6 +1,7 @@
 library floating_navbar;
 
 import 'package:floating_navbar/floating_navbar_item.dart';
+import 'package:floating_navbar/animation_constants.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -33,6 +34,21 @@ class FloatingNavBar extends StatefulWidget {
   /// The border radius of the navbar card
   double borderRadius;
 
+  /// Custom curve type for smooth corners
+  CurveType curveType;
+
+  /// Custom shadow blur radius
+  double shadowBlur;
+
+  /// Custom shadow spread radius  
+  double shadowSpread;
+
+  /// Shadow color
+  Color shadowColor;
+
+  /// Shadow offset
+  Offset shadowOffset;
+
   /// The width of the navbar card
   double? cardWidth;
 
@@ -48,12 +64,17 @@ class FloatingNavBar extends StatefulWidget {
   FloatingNavBar({
     Key? key,
     this.initialIndex = 0,
-    this.borderRadius = 15.0,
+    this.borderRadius = 28.0,
     this.cardWidth,
     this.showTitle = false,
     this.selectedIconColor = Colors.white,
     this.unselectedIconColor = Colors.white,
     this.resizeToAvoidBottomInset = false,
+    this.curveType = CurveType.smoothCorner,
+    this.shadowBlur = 20.0,
+    this.shadowSpread = 2.0,
+    this.shadowColor = const Color(0x40000000),
+    this.shadowOffset = const Offset(0, 4),
     required this.horizontalPadding,
     required this.items,
     required this.color,
@@ -106,19 +127,30 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
                 child: Container(
                   height: 70,
                   width: widget.cardWidth ?? MediaQuery.of(context).size.width,
-                  child: Card(
-                    elevation: 15.0,
+                  decoration: BoxDecoration(
                     color: widget.color,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(widget.borderRadius),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: widget.items.map((item) {
-                        int index = widget.items.indexOf(item);
-                        return _floatingNavBarItem(
-                            item, index, widget.hapticFeedback);
-                      }).toList(),
+                    borderRadius: _getBorderRadius(),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.shadowColor,
+                        blurRadius: widget.shadowBlur,
+                        spreadRadius: widget.shadowSpread,
+                        offset: widget.shadowOffset,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: _getBorderRadius(),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: widget.items.map((item) {
+                          int index = widget.items.indexOf(item);
+                          return _floatingNavBarItem(
+                              item, index, widget.hapticFeedback);
+                        }).toList(),
+                      ),
                     ),
                   ),
                 ),
@@ -171,7 +203,7 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
               ),
               widget.showTitle
                   ? AnimatedContainer(
-                      duration: Duration(milliseconds: 1000),
+                      duration: Duration(milliseconds: 500),
                       child: currentIndex == index
                           ? Text(
                               item.title,
@@ -211,4 +243,44 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
       setState(() {});
     }
   }
+
+  /// Get border radius based on curve type
+  BorderRadius _getBorderRadius() {
+    switch (widget.curveType) {
+      case CurveType.circular:
+        return BorderRadius.circular(widget.borderRadius);
+      case CurveType.smoothCorner:
+        // iOS-style smooth continuous corners
+        return BorderRadius.only(
+          topLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
+          topRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
+          bottomLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
+          bottomRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
+        );
+      case CurveType.stadium:
+        return BorderRadius.circular(35);
+      case CurveType.squircle:
+        // Squircle-like corners (between rounded and square)
+        return BorderRadius.all(
+          Radius.elliptical(widget.borderRadius * 1.2, widget.borderRadius),
+        );
+      case CurveType.customTop:
+        // Custom top curves with straight bottom
+        return BorderRadius.only(
+          topLeft: Radius.circular(widget.borderRadius),
+          topRight: Radius.circular(widget.borderRadius),
+          bottomLeft: Radius.circular(widget.borderRadius * 0.4),
+          bottomRight: Radius.circular(widget.borderRadius * 0.4),
+        );
+    }
+  }
+}
+
+/// Enum for different curve types
+enum CurveType {
+  circular,      // Standard circular corners
+  smoothCorner,  // iOS-style smooth continuous corners
+  stadium,       // Pill/stadium shape
+  squircle,      // Squircle (between rounded rect and circle)
+  customTop,     // Custom top curves
 }
