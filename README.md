@@ -1,106 +1,169 @@
-# Cake Animation
+# Cake Transitions
 
-Flutter animations and UI components showcase with smooth transitions and interactive elements.
+A Flutter showcase demonstrating smooth iOS-style page transitions and sheet animations with custom timing and curves.
 
 ## Features
 
-### Tab Navigation
-- Animated tab bar with smooth shape indicator (350ms easeInOutCubic)
-- Drag gesture support for intuitive tab switching
-- Responsive touch areas for better usability
-- Portrait-only orientation lock
-
 ### Page Transitions
-- iOS-style page transitions with custom curves
-- Swipeable page routes
-- Multiple transition styles (fade, slide, scale)
+- **iOS Push Transition**: Native iOS-style slide animation with shadow effects
+- **Custom Timing**: 350ms forward, 250ms reverse with smooth curves
+- **Drag Gesture**: Full iOS-style swipe-to-back support
+- **Bottom-Aligned Layout**: Images positioned from bottom edge (bot = 0)
 
-### Interactive Components
-- Animated cards with flip effects
-- Custom dialogs with smooth animations
-- Toast notifications
-- OTP input screens
-- Bottom sheets
+### Sheet Animations
+- **Nathan Gitter Spring Values**: Authentic iOS spring physics (WWDC 2018)
+- **Non-Interactive Spring**: stiffness=246.74, damping=31.42
+- **Duration**: 285ms with natural physics-based settling
+- **Background Overlay**: Semi-transparent overlay with bottom sheet
 
-## Getting Started
+### Screen Navigation
+- **Screen 1**: Displays 1.png with invisible touch areas
+  - Middle touch (300x400): Navigate to Screen 2
+  - Top-left touch (100x100): Back button
+- **Screen 2**: Displays 2.png with back button
+- **Screen 3**: Displays bg.jpeg with SpringBottomSheet trigger
 
-### Prerequisites
-- Flutter SDK
-- Dart SDK
-
-### Installation
+## Installation
 
 ```bash
-git clone https://github.com/huygeek/cake_animation.git
-cd cake_animation
+git clone https://github.com/huygeek/cake_transition.git
+cd cake_transition
+cd example
 flutter pub get
 ```
 
-### Run Example
+## Running the App
 
+### Mobile
 ```bash
-cd example
 flutter run
+```
+
+### Web (Chrome)
+```bash
+flutter run -d chrome
+```
+
+## Usage
+
+### Page Transitions
+
+```dart
+import 'package:flutter/cupertino.dart';
+
+// Navigate with iOS-style transition
+Navigator.push(
+  context,
+  CupertinoPageRoute(
+    builder: (context) => MyScreen(),
+  ),
+);
+```
+
+### Custom Cake Page Route
+
+```dart
+import 'cake_transition.dart';
+
+// Custom iOS transition with custom timing
+Navigator.push(
+  context,
+  CakePageRoute(screen: 1), // 1: 1.png, 2: 2.png, 3: bg.jpeg
+);
+```
+
+### Spring Bottom Sheet
+
+```dart
+import 'spring_bottom_sheet.dart';
+
+// Show sheet with Nathan Gitter spring values
+SpringBottomSheet.show(
+  context: context,
+  springType: SpringType.fast, // Uses Nathan Gitter values
+  builder: (context) => MySheetContent(),
+);
+```
+
+## Implementation Details
+
+### Page Route Configuration
+```dart
+class CakePageRoute extends CupertinoPageRoute {
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 350);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 250);
+}
+```
+
+### Spring Physics (Nathan Gitter WWDC 2018)
+```dart
+// Non-Interactive Spring
+// dampingRatio: 1.0, response: 0.4s
+// stiffness = (2π/response)² = 246.74
+// damping = 4π×dampingRatio/response = 31.42
+```
+
+### Image Layout
+```dart
+Image.asset(
+  'assets/1.png',
+  width: double.infinity,
+  fit: BoxFit.fitWidth,
+  alignment: Alignment.bottomCenter, // bot = 0
+)
 ```
 
 ## Project Structure
 
 ```
 lib/
-├── floating_navbar.dart          # Main navigation component
-├── floating_navbar_item.dart     # Navigation item model
-└── animation_constants.dart      # Animation configuration
+├── cake_transition.dart      # Custom page route implementation
+├── spring_bottom_sheet.dart   # Nathan Gitter spring animations
+└── pink_button.dart          # Reusable pink button component
 
-example/lib/
-├── main.dart                     # Main app with tab navigation
-├── card_detail_screen.dart       # Card animations demo
-├── otp_screen.dart              # OTP input UI
-├── custom_dialog.dart           # Dialog component
-├── custom_toast.dart            # Toast notifications
-├── swipeable_page_route.dart    # Page transition implementation
-└── ...                          # More examples
+example/
+├── lib/
+│   ├── main.dart            # Main app with 2 animations
+│   └── assets/              # Images (1.png, 2.png, bg.jpeg, Sheet.png)
+└── pubspec.yaml             # Dependencies and asset configuration
 ```
 
-## Tab Navigation Example
+## Assets
 
-```dart
-import 'package:flutter/material.dart';
+### Images Required
+- `assets/1.png` - First screen background
+- `assets/2.png` - Second screen background
+- `assets/bg.jpeg` - Third screen background
+- `assets/Sheet.png` - Bottom sheet content
 
-class FigmaTabScreen extends StatefulWidget {
-  @override
-  _FigmaTabScreenState createState() => _FigmaTabScreenState();
-}
+### Touch Areas
+- **Back Button**: 100x100 at top-left corner
+- **Navigation**: 300x400 at screen center
 
-class _FigmaTabScreenState extends State<FigmaTabScreen> {
-  int _selectedTabIndex = 0;
-  final List<String> tabs = ['Tài sản', 'Danh mục', 'Phải trả', 'Quyền', 'Tab'];
+## Technical Specifications
 
-  @override
-  Widget build(BuildContext context) {
-    // Tab bar with animated indicator
-    // Supports both tap and drag gestures
-    // 350ms easeInOutCubic animation
-  }
-}
-```
+### Animation Timing
+- Page Forward: 350ms
+- Page Back: 250ms
+- Sheet Duration: 285ms (physics-based ~350ms)
 
-## Customization
+### Spring Values
+- Stiffness: 246.74 (Nathan Gitter non-interactive)
+- Damping: 31.42
+- Mass: 1.0
 
-### Animation Constants
-
-All animations use consistent timing and curves defined in `animation_constants.dart`:
-- Tab indicator: 350ms with `Curves.easeInOutCubic`
-- Page transitions: 250ms for forward, 220ms for reverse
-- Card flips: Custom timing based on interaction
+### Image Sizing
+- Fit: `BoxFit.fitWidth`
+- Alignment: `Alignment.bottomCenter`
+- Width: `double.infinity`
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Feel free to submit issues and enhancement requests!
 
 ## License
 
-This project is open source and available under the MIT License.
-
-## Acknowledgments
-
-Built with Flutter and inspired by modern mobile UI/UX patterns.
+MIT License - feel free to use this code in your projects.
