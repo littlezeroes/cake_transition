@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-
-// Authentic iOS Push Transition - 100% iOS Native Feel with swipe gesture on all platforms
 class IOSPageTransition extends CupertinoPageRoute {
   IOSPageTransition({required WidgetBuilder builder, RouteSettings? settings})
       : super(builder: builder, settings: settings);

@@ -102,63 +102,58 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: widget.resizeToAvoidBottomInset,
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child: Stack(
-          children: [
-            PageView(
-              physics: widget.scrollPhysics,
-              controller: _pageController,
-              children: widget.items.map((item) => item.page).toList(),
-              onPageChanged: (index) => this._changePage(index),
+    return Stack(
+      children: [
+        PageView(
+          physics: widget.scrollPhysics,
+          controller: _pageController,
+          children: widget.items.map((item) => item.page).toList(),
+          onPageChanged: (index) => this._changePage(index),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 20,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: 10.0,
+              horizontal: widget.horizontalPadding,
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 20,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: widget.horizontalPadding,
-                ),
-                child: Container(
-                  height: 70,
-                  width: widget.cardWidth ?? MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                    color: widget.color,
-                    borderRadius: _getBorderRadius(),
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.shadowColor,
-                        blurRadius: widget.shadowBlur,
-                        spreadRadius: widget.shadowSpread,
-                        offset: widget.shadowOffset,
-                      ),
-                    ],
+            child: Container(
+              height: 70,
+              width: widget.cardWidth ?? MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                color: widget.color,
+                borderRadius: _getBorderRadius(),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.shadowColor,
+                    blurRadius: widget.shadowBlur,
+                    spreadRadius: widget.shadowSpread,
+                    offset: widget.shadowOffset,
                   ),
-                  child: ClipRRect(
-                    borderRadius: _getBorderRadius(),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: widget.items.map((item) {
-                          int index = widget.items.indexOf(item);
-                          return _floatingNavBarItem(
-                              item, index, widget.hapticFeedback);
-                        }).toList(),
-                      ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: _getBorderRadius(),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: widget.items.map((item) {
+                        int index = widget.items.indexOf(item);
+                        return _floatingNavBarItem(
+                            item, index, widget.hapticFeedback);
+                      }).toList(),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -203,7 +198,8 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
               ),
               widget.showTitle
                   ? AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
                       child: currentIndex == index
                           ? Text(
                               item.title,
@@ -217,7 +213,8 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
                           : SizedBox.shrink(),
                     )
                   : AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
                       height: 5,
                       width: 5,
                       decoration: BoxDecoration(
@@ -252,10 +249,10 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
       case CurveType.smoothCorner:
         // iOS-style smooth continuous corners
         return BorderRadius.only(
-          topLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
-          topRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
-          bottomLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
-          bottomRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.9),
+          topLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+          topRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+          bottomLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+          bottomRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
         );
       case CurveType.stadium:
         return BorderRadius.circular(35);

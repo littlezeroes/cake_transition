@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:floating_navbar/floating_navbar.dart';
 import 'package:floating_navbar/floating_navbar_item.dart';
 
+// Helper function moved to the top level
+String _getCurveTypeName(CurveType type) {
+  switch (type) {
+    case CurveType.circular:
+      return 'Circular';
+    case CurveType.smoothCorner:
+      return 'Smooth';
+    case CurveType.stadium:
+      return 'Stadium';
+    case CurveType.squircle:
+      return 'Squircle';
+    case CurveType.customTop:
+      return 'Custom';
+  }
+}
+
 class CurveDemoScreen extends StatefulWidget {
   @override
   _CurveDemoScreenState createState() => _CurveDemoScreenState();
@@ -13,8 +29,8 @@ class _CurveDemoScreenState extends State<CurveDemoScreen> {
   double shadowBlur = 20.0;
   double shadowSpread = 2.0;
   double horizontalPadding = 20.0;
-  Color shadowColor = const Color(0x40000000);
-  
+  Color shadowColor = const Color(0x1A000000);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,27 +52,27 @@ class _CurveDemoScreenState extends State<CurveDemoScreen> {
               items: [
                 FloatingNavBarItem(
                   iconData: Icons.home,
-                  page: _buildDemoPage('Home', Colors.blue[50]!),
+                  page: DemoPage(title: 'Home', color: Colors.blue[50]!, borderRadius: borderRadius, selectedCurveType: selectedCurveType),
                   title: 'Home',
                 ),
                 FloatingNavBarItem(
                   iconData: Icons.search,
-                  page: _buildDemoPage('Search', Colors.green[50]!),
+                  page: DemoPage(title: 'Search', color: Colors.green[50]!, borderRadius: borderRadius, selectedCurveType: selectedCurveType),
                   title: 'Search',
                 ),
                 FloatingNavBarItem(
                   iconData: Icons.add_circle,
-                  page: _buildDemoPage('Add', Colors.purple[50]!),
+                  page: DemoPage(title: 'Add', color: Colors.purple[50]!, borderRadius: borderRadius, selectedCurveType: selectedCurveType),
                   title: 'Add',
                 ),
                 FloatingNavBarItem(
                   iconData: Icons.notifications,
-                  page: _buildDemoPage('Notifications', Colors.orange[50]!),
+                  page: DemoPage(title: 'Notifications', color: Colors.orange[50]!, borderRadius: borderRadius, selectedCurveType: selectedCurveType),
                   title: 'Alerts',
                 ),
                 FloatingNavBarItem(
                   iconData: Icons.person,
-                  page: _buildDemoPage('Profile', Colors.red[50]!),
+                  page: DemoPage(title: 'Profile', color: Colors.red[50]!, borderRadius: borderRadius, selectedCurveType: selectedCurveType),
                   title: 'Profile',
                 ),
               ],
@@ -174,25 +190,60 @@ class _CurveDemoScreenState extends State<CurveDemoScreen> {
       ),
     );
   }
-  
-  String _getCurveTypeName(CurveType type) {
-    switch (type) {
-      case CurveType.circular:
-        return 'Circular';
-      case CurveType.smoothCorner:
-        return 'Smooth';
-      case CurveType.stadium:
-        return 'Stadium';
-      case CurveType.squircle:
-        return 'Squircle';
-      case CurveType.customTop:
-        return 'Custom';
-    }
+}
+
+// DemoPage Widget is now a top-level class
+class DemoPage extends StatefulWidget {
+  final String title;
+  final Color color;
+  final double borderRadius;
+  final CurveType selectedCurveType;
+
+  const DemoPage({
+    Key? key,
+    required this.title,
+    required this.color,
+    required this.borderRadius,
+    required this.selectedCurveType,
+  }) : super(key: key);
+
+  @override
+  _DemoPageState createState() => _DemoPageState();
+}
+
+class _DemoPageState extends State<DemoPage> {
+  late BorderRadius _currentBorderRadius;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start with rounded corners
+    _currentBorderRadius = BorderRadius.only(
+      topLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+      topRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+      bottomLeft: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+      bottomRight: Radius.elliptical(widget.borderRadius, widget.borderRadius * 0.6),
+    );
+
+    // After the first frame, animate to sharp corners
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          _currentBorderRadius = BorderRadius.zero;
+        });
+      }
+    });
   }
-  
-  Widget _buildDemoPage(String title, Color color) {
-    return Container(
-      color: color,
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: _currentBorderRadius,
+      ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -204,7 +255,7 @@ class _CurveDemoScreenState extends State<CurveDemoScreen> {
             ),
             SizedBox(height: 20),
             Text(
-              title,
+              widget.title,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -213,7 +264,7 @@ class _CurveDemoScreenState extends State<CurveDemoScreen> {
             ),
             SizedBox(height: 10),
             Text(
-              'Curve Type: ${_getCurveTypeName(selectedCurveType)}',
+              'Curve Type: ${_getCurveTypeName(widget.selectedCurveType)}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],

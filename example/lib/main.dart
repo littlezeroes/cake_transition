@@ -1,3 +1,7 @@
+import 'package:animations/animations.dart';
+import 'pink_button_page.dart';
+import 'pink_button.dart';
+import 'cake_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -8,10 +12,233 @@ import 'card_detail_screen.dart';
 import 'flip_comparison_screen.dart';
 import 'custom_toast.dart';
 import 'transition_showcase.dart';
-import 'swipeable_page_route.dart';
 import 'curve_demo.dart';
+import 'spring_bottom_sheet.dart';
+import 'dynamic_height_sheet.dart';
+import 'multi_view_sheet.dart';
+import 'simple_animation_sheet.dart';
+import 'ios_page_transition.dart';
 
-// Perfect iOS page transition
+/// iOS-like slide:
+/// - Top screen: slide từ phải -> trái, 250ms, easeOutCubic.
+/// - Bottom screen: chỉ bắt đầu di chuyển khi secondaryAnimation >= 0.5,
+///   trượt sang trái đến -30% chiều rộng, curve chậm hơn (easeOutQuad).
+class IOS26SlideTransitionsBuilder extends PageTransitionsBuilder {
+  const IOS26SlideTransitionsBuilder();
+
+  static const _topDuration = Duration(milliseconds: 250);
+  static const _topReverse = Duration(milliseconds: 220);
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final forwardCurve = Curves.easeInOut;
+    final reverseCurve = Curves.easeOut;
+
+    // Luôn áp dụng cả hai animation - chúng sẽ tự động hoạt động đúng
+    // animation = 0->1 cho route mới, secondaryAnimation = 0->1 cho route cũ
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(parent: animation, curve: forwardCurve, reverseCurve: reverseCurve)),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.30, 0.0),
+        ).animate(CurvedAnimation(parent: secondaryAnimation, curve: forwardCurve, reverseCurve: reverseCurve)),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Dùng Route với duration mong muốn (phục vụ khi push thủ công).
+class IOS26SlidePageRoute<T> extends PageRouteBuilder<T> {
+  IOS26SlidePageRoute({required WidgetBuilder builder})
+      : super(
+          pageBuilder: (ctx, _, __) => builder(ctx),
+          transitionDuration: const Duration(milliseconds: 250),
+          reverseTransitionDuration: const Duration(milliseconds: 220),
+          transitionsBuilder: (context, animation, secondary, child) {
+            // Lưu ý: trong PageRouteBuilder đơn lẻ, bạn KHÔNG render được "màn dưới".
+            // Parallax của màn dưới sẽ hoạt động đúng nếu app đã set PageTransitionsTheme bên dưới.
+            final curve = Curves.easeOutCubic;
+            final topSlide = Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: curve)).animate(animation);
+
+            return SlideTransition(position: topSlide, child: child);
+          },
+        );
+}
+
+/// PageRouteBuilder với hỗ trợ drag gesture
+class IOS26SlidePageRouteWithGesture<T> extends PageRouteBuilder<T> {
+  final WidgetBuilder builder;
+  final bool enableDragGesture;
+
+  IOS26SlidePageRouteWithGesture({
+    required this.builder,
+    this.enableDragGesture = true,
+  }) : super(
+          settings: const RouteSettings(name: "IOS26SlidePageRouteWithGesture"),
+          pageBuilder: (ctx, _, __) => builder(ctx),
+          transitionDuration: const Duration(milliseconds: 250),
+          reverseTransitionDuration: const Duration(milliseconds: 220),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            if (!enableDragGesture) {
+              final curve = Curves.easeOutCubic;
+              final topSlide = Tween<Offset>(
+                begin: const Offset(1, 0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: curve)).animate(animation);
+
+              return SlideTransition(position: topSlide, child: child);
+            }
+
+            return _DraggablePageRouteTransition(
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              child: child,
+            );
+          },
+        );
+}
+
+/// Widget cho phép drag gesture điều khiển page transition
+class _DraggablePageRouteTransition extends StatefulWidget {
+  final Animation<double> animation;
+  final Animation<double> secondaryAnimation;
+  final Widget child;
+
+  const _DraggablePageRouteTransition({
+    required this.animation,
+    required this.secondaryAnimation,
+    required this.child,
+  });
+
+  @override
+  State<_DraggablePageRouteTransition> createState() => _DraggablePageRouteTransitionState();
+}
+
+class _DraggablePageRouteTransitionState extends State<_DraggablePageRouteTransition>
+    with TickerProviderStateMixin {
+  late AnimationController _dragController;
+  late Animation<double> _dragAnimation;
+  bool _isDragging = false;
+  double _dragStartX = 0.0;
+  double _currentDragX = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _dragController = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _dragAnimation = _dragController;
+  }
+
+  @override
+  void dispose() {
+    _dragController.dispose();
+    super.dispose();
+  }
+
+  void _handlePanStart(DragStartDetails details) {
+    // Bắt đầu drag từ bất kỳ đâu trên màn hình
+    setState(() {
+      _isDragging = true;
+      _dragStartX = details.globalPosition.dx;
+      _currentDragX = 0.0;
+    });
+    _dragController.value = 1.0; // Bắt đầu từ trạng thái hiển thị đầy đủ
+    _dragController.stop();
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (!_isDragging) return;
+
+    setState(() {
+      _currentDragX = details.globalPosition.dx - _dragStartX;
+      final screenWidth = MediaQuery.of(context).size.width;
+
+      // Cho phép drag cả hai hướng
+      double progress = 1.0 - (_currentDragX / screenWidth);
+      progress = progress.clamp(0.0, 1.0);
+
+      _dragController.value = progress;
+    });
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    if (!_isDragging) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final progress = (_currentDragX / screenWidth).clamp(0.0, 1.0);
+
+    setState(() {
+      _isDragging = false;
+    });
+
+    // Nếu drag > 30% screen width hoặc drag tốc độ nhanh, pop route
+    if (progress > 0.3 || details.velocity.pixelsPerSecond.dx > 500) {
+      _dragController.animateTo(0.0).then((_) {
+        Navigator.of(context).pop();
+      });
+    } else {
+      // Ngược lại, animate trở lại
+      _dragController.animateTo(1.0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: _handlePanStart,
+      onPanUpdate: _handlePanUpdate,
+      onPanEnd: _handlePanEnd,
+      behavior: HitTestBehavior.translucent,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([widget.animation, _dragAnimation]),
+        builder: (context, _) {
+          // Sử dụng animation chính hoặc drag animation
+          double progress = _isDragging ? _dragAnimation.value : widget.animation.value;
+
+          // Áp dụng cả top slide và bottom parallax
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOutCubic)).animate(
+              AlwaysStoppedAnimation(progress),
+            ),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset.zero,
+                end: const Offset(-0.30, 0.0),
+              ).chain(
+                CurveTween(curve: const Interval(0.5, 1.0, curve: Curves.easeOutQuad)),
+              ).animate(
+                AlwaysStoppedAnimation(1.0 - progress), // Reverse cho bottom screen
+              ),
+              child: widget.child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Perfect iOS page transition (legacy)
 class PerfectIOSPageTransition extends PageRouteBuilder {
   final Widget page;
 
@@ -70,6 +297,16 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         fontFamily: 'Inter',
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: IOS26SlideTransitionsBuilder(),
+            TargetPlatform.iOS: IOS26SlideTransitionsBuilder(),
+            TargetPlatform.macOS: IOS26SlideTransitionsBuilder(),
+            TargetPlatform.windows: IOS26SlideTransitionsBuilder(),
+            TargetPlatform.linux: IOS26SlideTransitionsBuilder(),
+            TargetPlatform.fuchsia: IOS26SlideTransitionsBuilder(),
+          },
+        ),
       ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -83,16 +320,17 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
+      body: Column(
         children: [
           // Main content - QR Scan Page
-          ScanPage(),
+          Expanded(
+            child: RepaintBoundary(
+              child: ScanPage(),
+            ),
+          ),
 
           // Floating Navigation Bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+          RepaintBoundary(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -129,15 +367,13 @@ class HomeScreen extends StatelessWidget {
                           context,
                           icon: Icons.swap_horiz,
                           label: 'NẠP RÚT',
-                          onTap: () => Navigator.push(context, SwipeablePageRoute(builder: (_) => EmptyPage())),
+                          page: EmptyPage(),
                         ),
                         _buildNavItem(
                           context,
                           icon: Icons.show_chart,
                           label: 'THỊ TRƯỜNG',
-                          onTap: () {
-                            Navigator.push(context, SwipeablePageRoute(builder: (_) => EmptyPage()));
-                          },
+                          page: EmptyPage(),
                         ),
                         _buildHighlightedNavItem(
                           context,
@@ -149,13 +385,13 @@ class HomeScreen extends StatelessWidget {
                           context,
                           icon: Icons.access_time,
                           label: 'SAO KÊ',
-                          onTap: () => Navigator.push(context, SwipeablePageRoute(builder: (_) => EmptyPage())),
+                          page: EmptyPage(),
                         ),
                         _buildNavItem(
                           context,
                           icon: Icons.account_balance_wallet,
                           label: 'MARGIN',
-                          onTap: () => Navigator.push(context, SwipeablePageRoute(builder: (_) => EmptyPage())),
+                          page: EmptyPage(),
                         ),
                       ],
                     ),
@@ -170,41 +406,49 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildNavItem(BuildContext context, {required IconData icon, required String label, VoidCallback? onTap}) {
+  static Widget _buildNavItem(BuildContext context, {required IconData icon, required String label, required Widget page}) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          color: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: 32,
-                child: Center(
-                  child: Icon(icon, size: 20, color: Colors.black),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                height: 12,
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 8,
-                    height: 1.5,
-                    letterSpacing: 0.02,
-                    color: Color(0xFF737373),
+      child: OpenContainer(
+        transitionType: ContainerTransitionType.fade,
+        transitionDuration: const Duration(milliseconds: 500),
+        closedColor: Colors.transparent,
+        closedElevation: 0,
+        openElevation: 0,
+        openBuilder: (context, _) => page,
+        closedBuilder: (context, openContainer) => GestureDetector(
+          onTap: openContainer,
+          child: Container(
+            color: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 32,
+                  child: Center(
+                    child: Icon(icon, size: 20, color: Colors.black),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: 12,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 8,
+                      height: 1.5,
+                      letterSpacing: 0.02,
+                      color: Color(0xFF737373),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -284,34 +528,45 @@ class EmptyPage extends StatelessWidget {
 class ScanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 100),
-            // 5 Pink buttons theo Figma
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          // 5 Pink buttons theo Figma
             _buildPinkButton(
               context,
-              'Show Bottom Sheet',
+              'Bottom Sheet (Default)',
               () => showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.transparent,
+                barrierColor: Colors.black.withOpacity(0.3), // iOS 26 overlay
                 isScrollControlled: true,
-                builder: (context) => OTPScreen(),
+                builder: (context) => OTPScreen(index: 0),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             _buildPinkButton(
               context,
-              'Card Detail',
-              () => Navigator.push(
-                context,
-                SwipeablePageRoute(builder: (_) => CardDetailScreen()),
+              'Bottom Sheet (Spring)',
+              () => SpringBottomSheet.show(
+                context: context,
+                springType: SpringType.nonInteractive,
+                builder: (context) => OTPScreen(index: 1),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            _buildPinkButton(
+              context,
+              'Cake Sheet with Spring',
+              () => SpringBottomSheet.show(
+                context: context,
+                springType: SpringType.nonInteractive,
+                builder: (context) => OTPScreen(index: 2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildPinkButton(
               context,
               'Show Toast',
@@ -321,36 +576,64 @@ class ScanPage extends StatelessWidget {
                 buttonLabel: 'Got it',
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             _buildPinkButton(
               context,
               'Show Dialog',
               () {
-                showDialog(
-                  context: context,
-                  builder: (_) => CustomDialog(
-                    title: 'Success!',
-                    description: 'This is a custom dialog with smooth animations.',
-                    primaryButtonLabel: 'OK',
-                    secondaryButtonLabel: 'Cancel',
-                    onPrimaryPressed: () => Navigator.pop(context),
-                    onSecondaryPressed: () => Navigator.pop(context),
-                  ),
-                );
+                showV2CakeDialog(context);
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             _buildPinkButton(
               context,
               'Tab Page',
               () => Navigator.push(
                 context,
-                SwipeablePageRoute(builder: (_) => FigmaTabScreen()),
+                CupertinoPageRoute(builder: (_) => FigmaTabScreen()),
               ),
             ),
+            const SizedBox(height: 12),
+            _buildPinkButton(
+              context,
+              'test Cake page transition',
+              () => Navigator.push(
+                context,
+                CakePageRoute(screen: 1),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildPinkButton(
+              context,
+              'Demo Sheet',
+              () => Navigator.push(
+                context,
+                CakePageRoute(screen: 3),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OpenContainer(
+              transitionDuration: const Duration(milliseconds: 500),
+              closedBuilder: (BuildContext _, VoidCallback openContainer) {
+                return _buildPinkButton(
+                  context,
+                  'New Pink Button (Transform)',
+                  openContainer,
+                );
+              },
+              openBuilder: (BuildContext _, VoidCallback __) {
+                return PinkButtonPage();
+              },
+              closedColor: const Color(0xFFFF37A5),
+              closedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const SizedBox(height: 12),
+            const SizedBox(height: 12),
           ],
         ),
-      ),
     );
   }
 
@@ -385,7 +668,6 @@ class ScanPage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 // Figma Tab Screen - Simple and clean
@@ -738,6 +1020,130 @@ class _TabIndicatorPainter extends CustomPainter {
   }
 }
 
+// iOS 26 Detail Page
+class IOS26DetailPage extends StatelessWidget {
+  const IOS26DetailPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 18),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'iOS 26 Transition',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+            height: 1.33,
+            letterSpacing: -0.0018,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFF37A5), Color(0xFFEB0081)],
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.flutter_dash,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'iOS 26 Slide Transition',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+                color: Colors.black,
+                height: 1.25,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                '🎯 Drag Gesture Available!\n\nTry swiping from the right edge to go back:\n• Start drag from the right edge (20px zone)\n• Drag slowly to control the animation\n• Release >30% width or fast swipe to pop\n• Less than 30% = animates back\n\n✨ Features:\n• Top screen: right→left (250ms, easeOutCubic)\n• Bottom screen: starts at 50% progress\n• Bottom screen: slides to -30% (easeOutQuad)',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  color: Color(0xFF737373),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              child: _buildPinkButton(
+                context,
+                'Go Back',
+                () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildPinkButton(
+    BuildContext context,
+    String label,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF37A5),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Transition Showcase Screen
 class TransitionShowcaseScreen extends StatelessWidget {
   @override
@@ -752,6 +1158,117 @@ class TransitionShowcaseScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text('Transition Showcase'),
+      ),
+    );
+  }
+}
+
+// Cake Transition Page
+class CupertinoTransitionPage extends StatelessWidget {
+  const CupertinoTransitionPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 4.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 18),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: const Text(
+          'Cake Transition',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+            height: 1.33,
+            letterSpacing: -0.0018,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16.0),
+        child: Image.asset(
+          'assets/images/stock_homepage.png',
+          width: double.infinity,
+          fit: BoxFit.fitWidth,
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildPinkButton(
+    BuildContext context,
+    String label,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF37A5),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FullScreenDialogPage extends StatelessWidget {
+  const FullScreenDialogPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Full Screen Dialog'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: const Center(
+        child: Text('This is a full screen dialog page!'),
+      ),
+    );
+  }
+}
+
+class CustomSwipePage extends StatelessWidget {
+  const CustomSwipePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Custom Swipe Page'),
+      ),
+      body: const Center(
+        child: Text('This page uses CustomSwipePageRoute!'),
       ),
     );
   }

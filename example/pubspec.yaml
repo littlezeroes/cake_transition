@@ -16,6 +16,8 @@ dependencies:
   inspector:
     git:
       url: https://github.com/kekland/inspector.git
+  smooth_corner: ^1.0.1
+
 #    git:
 #      url: "git://github.com/iamngoni/floating_navbar.git"
 
@@ -23,6 +25,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  animations: ^2.0.11
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -38,6 +41,10 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/1.png
+    - assets/2.png
+    - assets/bg.jpeg
+    - assets/Sheet.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
