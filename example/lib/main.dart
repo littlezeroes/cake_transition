@@ -1,4 +1,5 @@
 import 'cake_transition.dart';
+import 'custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -174,6 +175,18 @@ class ScanPage extends StatelessWidget {
             () => Navigator.push(
               context,
               CakePageRoute(screen: 3),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildPinkButton(
+            context,
+            'Dialog Animation',
+            () => CustomDialog.show(
+              context: context,
+              title: 'Title cố gắng 1 dòng thôi',
+              description: 'Description Nội dung chi tiết bỏ ở đây nhé. Xin cảm ơn! Kamsahamita',
+              primaryButtonLabel: 'Label',
+              secondaryButtonLabel: 'Label',
             ),
           ),
           const SizedBox(height: 12),

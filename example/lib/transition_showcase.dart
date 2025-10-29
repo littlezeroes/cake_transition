@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'ios_transitions.dart';
 import 'perfect_ios_transition.dart';
+import 'custom_dialog.dart';
 
 class TransitionShowcasePage extends StatelessWidget {
   @override
@@ -317,6 +318,19 @@ class TransitionShowcasePage extends StatelessWidget {
               label: Text('Side-by-Side Test'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF1E3A8A),
+                minimumSize: Size(double.infinity, 44),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () => showV2CakeDialog(context),
+              icon: Icon(Icons.cake),
+              label: Text('Show Pink Dialog'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFFF37A5),
                 minimumSize: Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
