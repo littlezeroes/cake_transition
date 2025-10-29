@@ -176,9 +176,9 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.97 : 1.0, // 🎯 ANIMATION: Scale down 3% when pressed
-        duration: const Duration(milliseconds: 100), // 🎯 ANIMATION: Quick press feedback
-        curve: Curves.easeOut, // 🎯 ANIMATION: Smooth deceleration
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
         child: Material(
           color: const Color(0xFFFF37A5),
           borderRadius: BorderRadius.circular(100),
@@ -230,9 +230,9 @@ class _SecondaryButtonState extends State<_SecondaryButton> {
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.97 : 1.0, // 🎯 ANIMATION: Scale down 3% when pressed
-        duration: const Duration(milliseconds: 100), // 🎯 ANIMATION: Quick press feedback
-        curve: Curves.easeOut, // 🎯 ANIMATION: Smooth deceleration
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
         child: Material(
           color: const Color(0xFFFEF1F9),
           borderRadius: BorderRadius.circular(100),

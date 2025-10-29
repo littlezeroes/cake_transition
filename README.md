@@ -1,6 +1,6 @@
 # Cake Transitions
 
-A Flutter showcase demonstrating smooth iOS-style page transitions and sheet animations with custom timing and curves.
+A Flutter showcase demonstrating smooth iOS-style page transitions, sheet animations, and custom dialog animations with detailed timing and curves.
 
 ## Features
 
@@ -15,6 +15,13 @@ A Flutter showcase demonstrating smooth iOS-style page transitions and sheet ani
 - **Non-Interactive Spring**: stiffness=246.74, damping=31.42
 - **Duration**: 285ms with natural physics-based settling
 - **Background Overlay**: Semi-transparent overlay with bottom sheet
+
+### Dialog Animations
+- **Center Dialog Animation**: iOS-style scale + fade transition
+- **Custom Timing**: 240ms enter duration with smooth curves
+- **Scale Effect**: 0.95 → 1.0 zoom with easeInOut curve
+- **Fade Effect**: 0.0 → 1.0 opacity for smooth appearance
+- **Detailed Comments**: Every animation line annotated with 🎯 markers
 
 ### Screen Navigation
 - **Screen 1**: Displays 1.png with invisible touch areas
@@ -72,6 +79,21 @@ Navigator.push(
 );
 ```
 
+### Custom Dialog Animation
+
+```dart
+import 'custom_dialog.dart';
+
+// Show dialog with iOS-style scale + fade animation
+CustomDialog.show(
+  context: context,
+  title: 'Dialog Title',
+  description: 'Dialog description text',
+  primaryButtonLabel: 'Primary Action',
+  secondaryButtonLabel: 'Secondary Action',
+);
+```
+
 ### Spring Bottom Sheet
 
 ```dart
@@ -98,6 +120,20 @@ class CakePageRoute extends CupertinoPageRoute {
 }
 ```
 
+### Dialog Animation Configuration
+```dart
+// 🎯 ANIMATION: CustomDialog scale + fade transition
+final scaleAnimation = Tween<double>(
+  begin: 0.95, // Start slightly smaller
+  end: 1.0,   // End at normal size
+).animate(curvedAnimation);
+
+final fadeAnimation = Tween<double>(
+  begin: 0.0, // Start invisible
+  end: 1.0,   // End fully visible
+).animate(curvedAnimation);
+```
+
 ### Spring Physics (Nathan Gitter WWDC 2018)
 ```dart
 // Non-Interactive Spring
@@ -122,11 +158,15 @@ Image.asset(
 lib/
 ├── cake_transition.dart      # Custom page route implementation
 ├── spring_bottom_sheet.dart   # Nathan Gitter spring animations
+├── custom_dialog.dart        # iOS-style dialog animations
+├── transition_showcase.dart  # iOS transitions comparison page
 └── pink_button.dart          # Reusable pink button component
 
 example/
 ├── lib/
-│   ├── main.dart            # Main app with 2 animations
+│   ├── main.dart            # Main app with 3 animations + dialog
+│   ├── custom_dialog.dart   # Center dialog with 240ms animation
+│   ├── transition_showcase.dart  # Page transition showcase
 │   └── assets/              # Images (1.png, 2.png, bg.jpeg, Sheet.png)
 └── pubspec.yaml             # Dependencies and asset configuration
 ```
@@ -148,7 +188,14 @@ example/
 ### Animation Timing
 - Page Forward: 350ms
 - Page Back: 250ms
+- Dialog Animation: 240ms enter with easeInOut curve
 - Sheet Duration: 285ms (physics-based ~350ms)
+
+### Dialog Animation Properties
+- Scale Effect: 0.95 → 1.0 zoom
+- Fade Effect: 0.0 → 1.0 opacity
+- Curve: Curves.easeInOut for smooth acceleration/deceleration
+- Comments: Detailed 🎯 markers for every animation line
 
 ### Spring Values
 - Stiffness: 246.74 (Nathan Gitter non-interactive)
